@@ -14,7 +14,7 @@ This post walks through the codemod I built to automate the mechanical parts of 
 
 ## Automation Coverage
 
-**~80% of call-site changes handled deterministically** across 9 transforms. The remaining ~20% are patterns where a wrong guess causes a runtime error, so they are left with TODO comments for manual cleanup.
+**~80% of call-site changes handled deterministically** across 9 transforms. The remaining ~20% are patterns where a wrong guess causes a runtime error — these are left with inline comments pointing exactly at what still needs doing.
 
 ---
 
@@ -209,7 +209,7 @@ bash codemon/solana-web3js-to-kit/migrate.sh ./path/to/your/project
 
 **No jscodeshift.** The entire codemod uses `ast-grep` (jssg), the Codemod platform's native engine. Patterns are expressed as AST templates rather than manual tree traversal, making them readable and auditable.
 
-**Leave comments, not broken code.** Where a partial transform is applied, the output still compiles and the TODO comment points exactly at what still needs doing. A broken file after a codemod run is worse than an unchanged one.
+**Leave comments, not broken code.** Where a partial transform is applied, the output still compiles and an inline comment points exactly at what still needs doing. A broken file after a codemod run is worse than an unchanged one.
 
 **Idempotency.** Every transform is safe to run multiple times. The RPC `.send()` transform uses two-pass position tracking to guarantee no call ever gets doubled.
 

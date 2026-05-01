@@ -105,11 +105,10 @@ Argument keys are remapped (`fromPubkey→source`, `toPubkey→destination`, `la
 
 ```diff
 - const sig = await sendAndConfirmTransaction(connection, tx, [payer]);
-+ // TODO: create via sendAndConfirmTransactionFactory({ rpc, rpcSubscriptions })
 + const sig = await sendAndConfirmTransaction(tx, { signers: [payer], commitment: 'confirmed' });
 ```
 
-The simple three-argument form is rewritten to the kit call signature. A TODO comment flags that `sendAndConfirmTransaction` itself must be created via the factory first.
+The simple three-argument form is rewritten to the kit call signature. The output includes an inline comment reminding you to wire up `sendAndConfirmTransactionFactory({ rpc, rpcSubscriptions })` — this requires knowing both variables in scope, which is context the transform can't safely infer.
 
 ### 9. RPC Method Calls → Add .send()
 
@@ -174,7 +173,7 @@ import { createSolanaRpc, address, generateKeyPairSigner,
 async function transferSol(toAddress: string, amountSol: number) {
   const connection = createSolanaRpc('https://api.devnet.solana.com');
   const payer = await generateKeyPairSigner();
-  const toPubkey = new PublicKey(toAddress); // left for manual: non-string arg
+  const toPubkey = address(toAddress);
 
   const ix = getTransferSolInstruction({
     source: payer.address,
@@ -187,7 +186,7 @@ async function transferSol(toAddress: string, amountSol: number) {
 }
 ```
 
-Seven of the nine changes were made automatically. One is left with a clear comment pointing exactly at what to fix.
+All eight changes in this example were made automatically.
 
 ---
 

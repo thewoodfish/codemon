@@ -43,8 +43,10 @@ const RPC_METHODS = [
   "getPerformanceSamples",
 ];
 
+// "client" is intentionally excluded — too generic (BanksClient, AnchorProvider, HTTP clients)
+// Only names that are unambiguously Solana RPC connections
 const BASELINE_RPC_NAMES = [
-  "connection", "conn", "rpc", "client", "solana",
+  "connection", "conn", "rpc", "solana",
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

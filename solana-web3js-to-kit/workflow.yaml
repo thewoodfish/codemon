@@ -71,10 +71,18 @@ nodes:
       - name: Run rpc-send transform
         run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/09-rpc-send.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
 
+  - id: type-annotations
+    name: Rewrite v1 type annotations to kit equivalents
+    type: automatic
+    dependsOn: [imports]
+    steps:
+      - name: Run type-annotations transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/10-type-annotations.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
   - id: ai-edge-cases
     name: Handle remaining edge cases with AI
     type: manual
-    dependsOn: [imports, cluster-api-url, connection, publickey, keypair, keypair-props, system-transfer, send-confirm, rpc-send]
+    dependsOn: [imports, cluster-api-url, connection, publickey, keypair, keypair-props, system-transfer, send-confirm, rpc-send, type-annotations]
     steps:
       - name: Print AI instructions
         run: |

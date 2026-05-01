@@ -22,6 +22,7 @@ run 05-keypair-props.ts   "Replacing .publicKey / .secretKey"
 run 06-system-transfer.ts "Replacing SystemProgram.transfer()"
 run 07-send-confirm.ts    "Replacing sendAndConfirmTransaction()"
 run 09-rpc-send.ts        "Adding .send() to bare RPC calls"
+run 10-type-annotations.ts "Rewriting v1 type annotations"
 
 echo ""
 echo "✅ Automated migration complete."

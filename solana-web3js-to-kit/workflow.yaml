@@ -63,10 +63,18 @@ nodes:
       - name: Run send-confirm transform
         run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/07-send-confirm.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
 
+  - id: rpc-send
+    name: Add .send() to bare RPC method calls
+    type: automatic
+    dependsOn: [connection]
+    steps:
+      - name: Run rpc-send transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/09-rpc-send.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
   - id: ai-edge-cases
     name: Handle remaining edge cases with AI
     type: manual
-    dependsOn: [imports, cluster-api-url, connection, publickey, keypair, keypair-props, system-transfer, send-confirm]
+    dependsOn: [imports, cluster-api-url, connection, publickey, keypair, keypair-props, system-transfer, send-confirm, rpc-send]
     steps:
       - name: Print AI instructions
         run: |
@@ -77,7 +85,6 @@ nodes:
           echo "  2. new PublicKey(buffer) — needs manual review"
           echo "  3. Multi-instruction Transaction.add() chains — rewrite to pipe() pattern"
           echo "  4. Commitment configuration — move to per-call options"
-          echo "  5. connection.getBalance() and other RPC calls — remap to rpc.*()"
           echo ""
           echo "Reference: https://github.com/anza-xyz/kit"
           echo "=================================="

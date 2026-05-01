@@ -14,7 +14,26 @@ This post walks through the codemod I built to automate the mechanical parts of 
 
 ## Automation Coverage
 
-**~80% of call-site changes handled deterministically** across 9 transforms. The remaining ~20% are patterns where a wrong guess causes a runtime error — these are left with inline comments pointing exactly at what still needs doing.
+**~80% of call-site changes handled deterministically** across 9 transforms. Here's the breakdown:
+
+| Pattern | Status |
+|---|---|
+| `import ... from '@solana/web3.js'` | ✅ Automated |
+| `clusterApiUrl('devnet')` → literal URL | ✅ Automated |
+| `new Connection(url)` → `createSolanaRpc(url)` | ✅ Automated |
+| `new PublicKey('string')` → `address('string')` | ✅ Automated |
+| `Keypair.generate()` → `await generateKeyPairSigner()` | ✅ Automated (async functions only) |
+| `.publicKey` → `.address`, `.secretKey` → `.privateKey` | ✅ Automated |
+| `SystemProgram.transfer({...})` → `getTransferSolInstruction({...})` | ✅ Automated |
+| `sendAndConfirmTransaction(conn, tx, [signer])` → kit signature | ✅ Automated |
+| `rpc.getBalance()`, `rpc.getSlot()`, etc. → add `.send()` | ✅ Automated |
+| `Keypair.fromSecretKey(bytes)` | ⚠️ Manual |
+| `new PublicKey(buffer)` | ⚠️ Manual |
+| Multi-instruction `Transaction.add().add()` chains | ⚠️ Manual |
+| Commitment level configuration | ⚠️ Manual |
+| `sendAndConfirmTransactionFactory` wiring | ⚠️ Manual |
+
+The manual patterns are skipped intentionally — not because they're hard, but because getting them wrong silently (wrong variable name, missing `await`, broken transaction structure) is worse than leaving them for a human to fix with full context.
 
 ---
 

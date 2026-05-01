@@ -7,10 +7,18 @@ nodes:
       - name: Run import transform
         run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/01-imports.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
 
+  - id: cluster-api-url
+    name: Resolve clusterApiUrl() calls to literal URL strings
+    type: automatic
+    dependsOn: [imports]
+    steps:
+      - name: Run cluster-api-url transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/08-cluster-api-url.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
   - id: connection
     name: Replace new Connection() with createSolanaRpc()
     type: automatic
-    dependsOn: [imports]
+    dependsOn: [cluster-api-url]
     steps:
       - name: Run connection transform
         run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/02-connection.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
@@ -58,7 +66,7 @@ nodes:
   - id: ai-edge-cases
     name: Handle remaining edge cases with AI
     type: manual
-    dependsOn: [imports, connection, publickey, keypair, keypair-props, system-transfer, send-confirm]
+    dependsOn: [imports, cluster-api-url, connection, publickey, keypair, keypair-props, system-transfer, send-confirm]
     steps:
       - name: Print AI instructions
         run: |

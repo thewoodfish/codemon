@@ -14,6 +14,7 @@ run() {
 }
 
 run 01-imports.ts         "Rewriting imports"
+run 08-cluster-api-url.ts "Resolving clusterApiUrl() to URL strings"
 run 02-connection.ts      "Replacing new Connection()"
 run 03-publickey.ts       "Replacing new PublicKey()"
 run 04-keypair-generate.ts "Replacing Keypair.generate()"

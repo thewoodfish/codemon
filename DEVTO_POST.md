@@ -14,7 +14,7 @@ This post walks through the codemod I built to automate the mechanical parts of 
 
 ## Automation Coverage
 
-**~80% of call-site changes handled deterministically** across 9 transforms. Here's the breakdown:
+**~85% of call-site changes handled deterministically** across 10 transforms. Here's the breakdown:
 
 | Pattern | Status |
 |---|---|
@@ -27,6 +27,7 @@ This post walks through the codemod I built to automate the mechanical parts of 
 | `SystemProgram.transfer({...})` → `getTransferSolInstruction({...})` | ✅ Automated |
 | `sendAndConfirmTransaction(conn, tx, [signer])` → kit signature | ✅ Automated |
 | `rpc.getBalance()`, `rpc.getSlot()`, etc. → add `.send()` | ✅ Automated |
+| `PublicKey`, `Keypair`, `TransactionInstruction` type annotations | ✅ Automated |
 | `Keypair.fromSecretKey(bytes)` | ⚠️ Manual |
 | `new PublicKey(buffer)` | ⚠️ Manual |
 | Multi-instruction `Transaction.add().add()` chains | ⚠️ Manual |
@@ -37,7 +38,7 @@ The manual patterns are skipped intentionally — not because they're hard, but 
 
 ---
 
-## What the Codemod Handles (9 Transforms)
+## What the Codemod Handles (10 Transforms)
 
 ### 1. Import Remapping
 
@@ -139,6 +140,15 @@ The simple three-argument form is rewritten to the kit call signature. The outpu
 ```
 
 In `@solana/kit`, every RPC method returns a `RpcRequest` — you have to call `.send()` on it to actually execute the request. This transform covers all 40+ RPC methods and is idempotent: running it twice won't double the `.send()`.
+
+### 10. Type Annotations
+
+```diff
+- function transfer(from: Keypair, to: PublicKey): Promise<TransactionInstruction> {
++ function transfer(from: KeyPairSigner, to: Address): Promise<IInstruction> {
+```
+
+Targets `type_identifier` AST nodes specifically — so `new PublicKey(...)` (already handled by transform #4) and `import { Keypair }` (handled by transform #1) are never touched twice. Also injects the matching `import type { Address, IInstruction, KeyPairSigner } from '@solana/kit'` automatically.
 
 ---
 

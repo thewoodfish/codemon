@@ -176,9 +176,8 @@ Each of these is either too risky to get wrong deterministically, or requires se
 import { Connection, PublicKey, Keypair, SystemProgram,
          LAMPORTS_PER_SOL, sendAndConfirmTransaction } from '@solana/web3.js';
 
-async function transferSol(toAddress: string, amountSol: number) {
+async function transferSol(payer: Keypair, toAddress: string, amountSol: number): Promise<PublicKey> {
   const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
-  const payer = Keypair.generate();
   const toPubkey = new PublicKey(toAddress);
 
   const ix = SystemProgram.transfer({
@@ -189,6 +188,7 @@ async function transferSol(toAddress: string, amountSol: number) {
 
   const balance = await connection.getBalance(payer.publicKey);
   console.log('Balance:', balance);
+  return toPubkey;
 }
 ```
 
@@ -198,10 +198,10 @@ async function transferSol(toAddress: string, amountSol: number) {
 import { getTransferSolInstruction } from '@solana-program/system';
 import { createSolanaRpc, address, generateKeyPairSigner,
          LAMPORTS_PER_SOL, sendAndConfirmTransactionFactory } from '@solana/kit';
+import type { Address, KeyPairSigner } from '@solana/kit';
 
-async function transferSol(toAddress: string, amountSol: number) {
+async function transferSol(payer: KeyPairSigner, toAddress: string, amountSol: number): Promise<Address> {
   const connection = createSolanaRpc('https://api.devnet.solana.com');
-  const payer = await generateKeyPairSigner();
   const toPubkey = address(toAddress);
 
   const ix = getTransferSolInstruction({
@@ -212,22 +212,25 @@ async function transferSol(toAddress: string, amountSol: number) {
 
   const balance = await connection.getBalance(payer.address).send();
   console.log('Balance:', balance);
+  return toPubkey;
 }
 ```
 
-All eight changes in this example were made automatically.
+All nine changes in this example were made automatically.
 
 ---
 
 ## How to Run It
 
 ```bash
-# One-liner via the codemod registry
-npx codemod solana-web3js-to-kit
-
-# Or clone and run the shell script directly
+# Via the shell script (most reliable)
 git clone https://github.com/thewoodfish/codemon
 bash codemon/solana-web3js-to-kit/migrate.sh ./path/to/your/project
+
+# Or run individual transforms via the codemod CLI
+npx codemod jssg run --language tsx \
+  ./solana-web3js-to-kit/transforms/01-imports.ts \
+  --target ./your/project --no-interactive --allow-dirty
 ```
 
 ---

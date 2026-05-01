@@ -1,4 +1,7 @@
+schema_version: "1.0"
 name: solana-web3js-to-kit
 version: 1.0.0
 description: Migrate @solana/web3.js v1 to @solana/kit
+author: thewoodfish <jasonholt2002@gmail.com>
+license: MIT
 workflow: workflow.yaml

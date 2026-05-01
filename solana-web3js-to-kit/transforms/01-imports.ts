@@ -6,7 +6,7 @@ const SPECIFIER_MAP: Record<string, string[]> = {
   PublicKey: ["address"],
   Keypair: ["generateKeyPairSigner"],
   Transaction: ["createTransactionMessage", "pipe"],
-  // SystemProgram → getTransferSolInstruction from @solana-program/system (handled by 06-system-transfer.ts)
+  // SystemProgram → @solana-program/system (handled by 06-system-transfer.ts)
   SystemProgram: [],
   LAMPORTS_PER_SOL: ["LAMPORTS_PER_SOL"],
   sendAndConfirmTransaction: ["sendAndConfirmTransactionFactory"],
@@ -23,29 +23,31 @@ const transform: Transform<TSX> = (root) => {
   if (matches.length === 0) return null;
 
   const edits = matches.map((node) => {
-    const text = node.text();
+    // Walk the AST: import_statement → named_imports → import_specifier[]
+    const namedImports = node.find({ rule: { kind: "named_imports" } });
+    if (!namedImports) return null;
 
-    // Extract the specifier block between { and }
-    const braceMatch = text.match(/import\s*\{([^}]+)\}/);
-    if (!braceMatch) return null;
-
-    const originalSpecifiers = braceMatch[1]
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const specifiers = namedImports.findAll({ rule: { kind: "import_specifier" } });
 
     const kitSpecifiers: string[] = [];
-    for (const spec of originalSpecifiers) {
-      const baseName = spec.split(/\s+as\s+/)[0].trim();
-      const mapped = SPECIFIER_MAP[baseName];
-      if (mapped) {
+    for (const spec of specifiers) {
+      // For "Connection" → first identifier is "Connection"
+      // For "PublicKey as PK" → first identifier is "PublicKey" (not the alias)
+      const nameNode = spec.find({ rule: { kind: "identifier" } });
+      const importedName = nameNode?.text();
+      if (!importedName) continue;
+
+      const mapped = SPECIFIER_MAP[importedName];
+      if (mapped !== undefined) {
         kitSpecifiers.push(...mapped);
       } else {
-        kitSpecifiers.push(spec);
+        kitSpecifiers.push(importedName);
       }
     }
 
-    const deduped = [...new Set(kitSpecifiers)];
+    const deduped = [...new Set(kitSpecifiers)].filter((s) => s.length > 0);
+    if (deduped.length === 0) return null;
+
     return node.replace(`import { ${deduped.join(", ")} } from '@solana/kit';`);
   });
 

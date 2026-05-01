@@ -1,6 +1,35 @@
 import type { Transform } from "codemod:ast-grep";
 import type TSX from "codemod:ast-grep/langs/tsx";
 
+const FUNCTION_KINDS = new Set([
+  "function_declaration",
+  "function",
+  "arrow_function",
+  "method_definition",
+  "generator_function_declaration",
+  "generator_function",
+]);
+
+function nearestFunctionIsAsync(node: ReturnType<ReturnType<typeof node.parent>["parent"]>): boolean {
+  let ancestor = node.parent();
+  while (ancestor) {
+    if (FUNCTION_KINDS.has(ancestor.kind())) {
+      // Check the function signature (text before the opening `{`) for the
+      // `async` keyword. This correctly handles:
+      //   async function main() { ... }
+      //   export async function main() { ... }   ← function_declaration starts at "async"
+      //   const f = async () => { ... }          ← arrow_function starts at "async"
+      //   class Foo { public async run() { } }   ← "public async" before "{"
+      const text = ancestor.text();
+      const braceIdx = text.indexOf("{");
+      const signature = braceIdx >= 0 ? text.slice(0, braceIdx) : text;
+      return /\basync\b/.test(signature);
+    }
+    ancestor = ancestor.parent();
+  }
+  return false;
+}
+
 const transform: Transform<TSX> = (root) => {
   const rootNode = root.root();
 
@@ -10,31 +39,9 @@ const transform: Transform<TSX> = (root) => {
 
   if (matches.length === 0) return null;
 
-  // Only transform when the call is already inside an async function.
-  // Walking ancestors: look for async_function, async arrow_function, etc.
   const edits = matches
     .map((node) => {
-      let ancestor = node.parent();
-      let insideAsync = false;
-      while (ancestor) {
-        const kind = ancestor.kind();
-        if (
-          kind === "function_declaration" ||
-          kind === "function" ||
-          kind === "arrow_function" ||
-          kind === "method_definition"
-        ) {
-          // Check if it has an `async` keyword by inspecting text prefix
-          const text = ancestor.text();
-          if (text.trimStart().startsWith("async")) {
-            insideAsync = true;
-          }
-          break;
-        }
-        ancestor = ancestor.parent();
-      }
-
-      if (!insideAsync) return null;
+      if (!nearestFunctionIsAsync(node)) return null;
       return node.replace("await generateKeyPairSigner()");
     })
     .filter(Boolean) as NonNullable<ReturnType<typeof matches[0]["replace"]>>[];

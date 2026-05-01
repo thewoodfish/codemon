@@ -1,0 +1,75 @@
+version: "1"
+nodes:
+  - id: imports
+    name: Rewrite @solana/web3.js imports to @solana/kit
+    type: automatic
+    steps:
+      - name: Run import transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/01-imports.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
+  - id: connection
+    name: Replace new Connection() with createSolanaRpc()
+    type: automatic
+    dependsOn: [imports]
+    steps:
+      - name: Run connection transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/02-connection.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
+  - id: publickey
+    name: Replace new PublicKey() with address()
+    type: automatic
+    dependsOn: [imports]
+    steps:
+      - name: Run publickey transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/03-publickey.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
+  - id: keypair
+    name: Replace Keypair.generate() with await generateKeyPairSigner()
+    type: automatic
+    dependsOn: [imports]
+    steps:
+      - name: Run keypair transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/04-keypair-generate.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
+  - id: keypair-props
+    name: Replace .publicKey/.secretKey with .address/.privateKey
+    type: automatic
+    dependsOn: [keypair]
+    steps:
+      - name: Run keypair-props transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/05-keypair-props.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
+  - id: system-transfer
+    name: Replace SystemProgram.transfer with getTransferSolInstruction
+    type: automatic
+    dependsOn: [imports]
+    steps:
+      - name: Run system-transfer transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/06-system-transfer.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
+  - id: send-confirm
+    name: Replace simple sendAndConfirmTransaction calls
+    type: automatic
+    dependsOn: [connection, keypair]
+    steps:
+      - name: Run send-confirm transform
+        run: npx codemod jssg run --language tsx "$(dirname "$0")/transforms/07-send-confirm.ts" --target "$CODEMOD_PATH" --no-interactive --allow-dirty
+
+  - id: ai-edge-cases
+    name: Handle remaining edge cases with AI
+    type: manual
+    dependsOn: [imports, connection, publickey, keypair, keypair-props, system-transfer, send-confirm]
+    steps:
+      - name: Print AI instructions
+        run: |
+          echo ""
+          echo "=== Manual / AI step required ==="
+          echo "Patterns NOT automated (too risky for deterministic transform):"
+          echo "  1. Keypair.fromSecretKey() — use createKeyPairSignerFromBytes()"
+          echo "  2. new PublicKey(buffer) — needs manual review"
+          echo "  3. Multi-instruction Transaction.add() chains — rewrite to pipe() pattern"
+          echo "  4. Commitment configuration — move to per-call options"
+          echo "  5. connection.getBalance() and other RPC calls — remap to rpc.*()"
+          echo ""
+          echo "Reference: https://github.com/anza-xyz/kit"
+          echo "=================================="

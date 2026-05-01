@@ -1,0 +1,1 @@
+const addr = keypair.address;

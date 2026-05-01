@@ -1,0 +1,1 @@
+const keypair = await generateKeyPairSigner();

@@ -1,0 +1,4 @@
+name: solana-web3js-to-kit
+version: 1.0.0
+description: Migrate @solana/web3.js v1 to @solana/kit
+workflow: workflow.yaml

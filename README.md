@@ -101,4 +101,8 @@ npx codemod jssg test --language tsx transforms/01-imports.ts tests/01-imports
 
 ---
 
+Registry: [app.codemod.com/registry/solana-web3js-to-kit](https://app.codemod.com/registry/solana-web3js-to-kit)
+
+Case study: [Automating the @solana/web3.js v1 → @solana/kit Migration with a Codemod](https://dev.to/thewoodfish/automating-the-solanaweb3js-v1-solanakit-migration-with-a-codemod-3535)
+
 Source: [github.com/thewoodfish/codemon](https://github.com/thewoodfish/codemon)

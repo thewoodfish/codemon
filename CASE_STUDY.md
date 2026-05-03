@@ -17,9 +17,15 @@ Published: https://dev.to/thewoodfish/automating-the-solanaweb3js-v1-solanakit-m
 
 ## What Was Migrated
 
-I tested the codemod against a representative TypeScript Solana application covering the
-most common web3.js v1 patterns: connection setup, key generation, address construction,
-SOL transfers, RPC calls, type annotations, and transaction submission.
+I tested the codemod against 60 TypeScript files from
+[`solana-developers/program-examples`](https://github.com/solana-developers/program-examples)
+(the `basics/` directory), covering connection setup, key generation, address
+construction, SOL transfers, RPC calls, type annotations, and transaction submission.
+Zero false positives confirmed across all 60 files.
+
+The real-repo test caught one critical issue before submission: `client` as a baseline
+RPC variable name would have incorrectly appended `.send()` to `BanksClient` methods in
+test files — it was removed from the detection list as a result.
 
 Automation coverage: **~85% of call-site changes** handled deterministically across
 10 transforms. The remaining ~15% are patterns where a wrong guess causes a runtime
